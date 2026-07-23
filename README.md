@@ -1,86 +1,69 @@
-# SIAMDA — Sistema Integrado de Análisis Multiresolución y Desempeño Académico
+# 📊 SIAMDA: Multiresolution Analytical & Performance Framework
 
-## Instalación
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.20+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
+![NLP](https://img.shields.io/badge/NLP-Sentence_Transformers-009688?style=for-the-badge)
+![Wavelets](https://img.shields.io/badge/Math-PyWavelets-5C3EE8?style=for-the-badge)
+![Plotly](https://img.shields.io/badge/Plotly-Interactive_Viz-3F4F75?style=for-the-badge&logo=plotly&logoColor=white)
+
+## 📌 Project Overview
+**SIAMDA** (Sistema Integrado de Análisis Multiresolución y Desempeño Académico) is an advanced stochastic and analytical framework. It integrates Natural Language Processing (NLP) with Discrete Wavelet Transforms (DWT) to model and evaluate performance metrics and textual sentiment.
+
+Developed as part of a formal research initiative (co-authored with Dr. Julio César Galindo López, 2026), this tool goes beyond simple dashboards by incorporating rigorous statistical validation, calculating Fisher Information and the Cramér-Rao Bound (CRB) to prove the efficiency of its estimators.
+
+---
+
+## 🧠 Core Architecture & Mathematical Pipeline
+
+The system is modularized into distinct analytical pipelines:
+
+1.  **Data Ingestion & Normalization (`datos.py`):** Automated parsing, cleaning, and standardization of complex matrix inputs (CSV/Excel), detecting multi-dimensional performance vectors.
+2.  **NLP & Wavelet Extraction (`nlp_wavelet.py`):** 
+    *   Generates semantic embeddings from open-ended text data using `sentence-transformers`.
+    *   Applies Multiresolution Analysis via Discrete Wavelet Transforms (DWT) to filter noise and extract underlying sentiment trends.
+3.  **Theoretical Validation (`cramer_rao.py`):** 
+    *   Evaluates the mathematical robustness of the models.
+    *   Computes the Fisher Information matrix and the Cramér-Rao lower bound to ensure estimator efficiency.
+4.  **Interactive Visualization:** An end-to-end Streamlit web interface with modular pages for data loading, quantitative metrics, stochastic sentiment analysis, and theoretical validation.
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Library / Framework |
+| :--- | :--- |
+| **Web Framework** | `streamlit` |
+| **Machine Learning / NLP** | `sentence-transformers` (Multilingual Embeddings) |
+| **Applied Mathematics** | `PyWavelets` (DWT), `scipy` (Statistical Testing) |
+| **Data Engineering** | `pandas`, `numpy` |
+| **Data Visualization** | `plotly` |
+
+---
+
+## 🚀 Setup & Local Execution
+
+### Prerequisites
+* Python 3.10+
+* Git
+
+### Installation Guide
 
 ```bash
-# 1. Clonar / descomprimir el proyecto
-cd siamda/
+# 1. Clone the repository
+git clone [https://github.com/Gabriel44svg/Galindo-C.-J.-y-Villafuerte-C.-G.-2026-.-SIAMDA.git](https://github.com/Gabriel44svg/Galindo-C.-J.-y-Villafuerte-C.-G.-2026-.-SIAMDA.git)
+cd SIAMDA
 
-# 2. Crear entorno virtual (recomendado)
+# 2. Create and activate a virtual environment (Recommended)
 python -m venv venv
-source venv/bin/activate        # Linux/Mac
-venv\Scripts\activate           # Windows
+# On Windows:
+.\venv\Scripts\activate
+# On macOS/Linux:
+# source venv/bin/activate
 
-# 3. Instalar dependencias
+# 3. Install required dependencies
 pip install -r requirements.txt
 
-# 4. Ejecutar la app
+# 4. Launch the application
 streamlit run app.py
 ```
 
-La app abre automáticamente en http://localhost:8501
-
----
-
-## Estructura del proyecto
-
-```
-siamda/
-├── app.py                      # Punto de entrada Streamlit
-├── state.py                    # Gestión centralizada del estado de sesión
-├── requirements.txt
-├── processing/
-│   ├── datos.py                # RF-01: Ingesta y normalización de datos
-│   ├── nlp_wavelet.py          # RF-02: Embeddings + DWT
-│   └── cramer_rao.py           # RF-03: Información de Fisher y Cota de Cramér-Rao
-├── pages/
-│   ├── carga.py                # Página: Carga de Datos
-│   ├── metricas.py             # Página: Métricas del Curso
-│   ├── sentimiento.py          # Página: Análisis de Sentimiento (Wavelets)
-│   └── validacion.py           # Página: Validación Teórica
-└── datos_ejemplo/
-    ├── calificaciones_ejemplo.csv
-    └── encuesta_ejemplo.csv
-```
-
----
-
-## Formato esperado de los CSVs
-
-### Calificaciones (puede ser Excel con múltiples hojas)
-| No-Cuenta | Nombre | E1 | E2 | E3 | EXAMENES (70%) | TAREAS (20%) | EXPO (10%) | Firmas | EXAMENES VALIDACION | TOTAL | Calificacion |
-|-----------|--------|----|----|----|----|----|----|----|----|----|----|
-
-- Las columnas de parciales son detectadas automáticamente (E1, E2, ExmP1, Parcial1…)
-- La columna `EXAMENES VALIDACION` puede contener texto como "Te presentas a final" o "Está en reposición"
-
-### Encuesta (CSV)
-| No-Cuenta | Nombre | Pregunta1 | Pregunta2 | ... |
-|-----------|--------|-----------|-----------|-----|
-
-- El sistema detecta automáticamente columnas de respuesta abierta (texto > 20 chars en promedio)
-- Se puede vincular con calificaciones mediante `No-Cuenta`
-
----
-
-## Flujo de uso
-
-1. **Carga de Datos** → Subir calificaciones y encuesta, confirmar columnas
-2. **Métricas del Curso** → Dashboard cuantitativo, alertas de riesgo
-3. **Análisis de Sentimiento** → Seleccionar wavelet y nivel, ejecutar pipeline NLP
-4. **Validación Teórica** → Revisar Información de Fisher, CRB y eficiencia del estimador
-
----
-
-## Dependencias principales
-
-| Librería | Uso |
-|----------|-----|
-| `streamlit` | Framework de la app web |
-| `sentence-transformers` | Embeddings multilingüe |
-| `PyWavelets` | Transformada Discreta de Onduleta |
-| `plotly` | Gráficos interactivos |
-| `scipy` | Test de normalidad, estadística |
-| `pandas / numpy` | Procesamiento de datos |
-
-> ⚠️ La primera ejecución descarga el modelo de sentence-transformers (~90 MB). Se cachea localmente.
