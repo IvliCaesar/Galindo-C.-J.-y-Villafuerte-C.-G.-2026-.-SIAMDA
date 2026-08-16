@@ -171,7 +171,11 @@ def detectar_col_texto(df: pd.DataFrame) -> list[str]:
     """Detecta columnas de texto (respuestas abiertas) en el DataFrame de encuesta."""
     candidatas = []
     for col in df.columns:
-        if df[col].dtype == object:
+        # pd.api.types.is_string_dtype cubre tanto el dtype 'object' clásico
+        # como el dtype de string dedicado que pandas >= 2.x/3.x puede inferir
+        # por defecto (pd.options.future.infer_string); comparar contra
+        # `== object` deja de detectar cualquier columna de texto en ese caso.
+        if pd.api.types.is_string_dtype(df[col]):
             avg_len = df[col].dropna().astype(str).str.len().mean()
             if avg_len and avg_len > 20:   # respuestas con más de 20 chars en promedio
                 candidatas.append(col)

@@ -30,6 +30,8 @@
 \Crefname{section}{Sección}{Secciones}
 \crefname{equation}{ecuación}{ecuaciones}
 \Crefname{equation}{Ecuación}{Ecuaciones}
+\crefname{table}{cuadro}{cuadros}
+\Crefname{table}{Cuadro}{Cuadros}
 
 \hypersetup{
   colorlinks=true,
@@ -104,7 +106,34 @@ caso.
 transformada wavelet, información de Fisher, cota de Cramér--Rao.
 \end{abstract}
 
-\section{Introducción}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{@{}p{0.42\linewidth}p{0.5\linewidth}@{}}
+\toprule
+\textbf{Metadato del código} & \textbf{Valor} \\
+\midrule
+Versión actual del código & v1.0 \\
+Enlace permanente al repositorio de esta versión &
+  \href{https://github.com/Gabriel44svg/Galindo-C.-J.-y-Villafuerte-C.-G.-2026-.-SIAMDA}{github.com/Gabriel44svg/\ldots-SIAMDA} \\
+Licencia legal del código & MIT \\
+Sistema de control de versiones usado & git \\
+Lenguajes, herramientas y servicios usados &
+  Python~3.11; Streamlit; sentence-transformers; PyWavelets; SciPy; pandas; Plotly; pytest \\
+Requisitos de compilación, entornos y dependencias &
+  Python $\ge 3.10$; ver \texttt{requirements.txt} (ejecución) y \texttt{requirements-dev.txt}
+  (pruebas) \\
+Enlace a documentación de desarrollador/manual &
+  \texttt{README.md} en el repositorio \\
+Correo de soporte para preguntas & \texttt{jcgalindo@up.edu.mx} \\
+\bottomrule
+\end{tabular}
+\caption{Metadatos del código (formato estándar de \emph{software papers}).}
+\label{tab:metadata}
+\end{table}
+
+\section{Motivation and significance}
+\label{sec:motivacion}
 
 Un curso genera dos tipos de señal sobre el desempeño de un alumno: una \emph{cuantitativa}
 (calificaciones parciales, tareas, exposición) y una \emph{cualitativa} (lo que el alumno
@@ -126,7 +155,11 @@ separado, sino documentar con precisión qué certifica —y, sobre todo, qué \
 su combinación, algo que la primera versión de nuestra propia implementación afirmaba de forma
 imprecisa (\cref{sec:crb}).
 
-\section{Arquitectura del sistema}
+\section{Software description}
+\label{sec:descripcion}
+
+\subsection{Software architecture}
+\label{sec:arquitectura}
 
 El sistema se organiza en cuatro módulos:
 
@@ -147,9 +180,10 @@ El sistema se organiza en cuatro módulos:
   automáticas en lenguaje natural para cada métrica.
 \end{enumerate}
 
-\section{Métodos}
+\subsection{Software functionalities}
+\label{sec:funcionalidades}
 
-\subsection{Bandera de riesgo académico}
+\subsubsection{Bandera de riesgo académico}
 
 Sea $c_i$ la calificación final del alumno $i$ y $e_i\in\{\text{Normal},\ldots\}$ su estado de
 validación (reposición, examen final, baja, etc.). El sistema define
@@ -159,7 +193,7 @@ r_i = \mathbf{1}\{c_i < 70\} \ \vee\ \mathbf{1}\{e_i \neq \text{Normal}\},
 es decir, un alumno está en riesgo si su calificación cae por debajo del umbral aprobatorio
 (70) o si tiene un estado especial registrado, independientemente de la calificación numérica.
 
-\subsection{Índice de sentimiento por transformada wavelet}
+\subsubsection{Índice de sentimiento por transformada wavelet}
 \label{sec:indice}
 
 Para cada alumno $i$, el modelo de \emph{sentence-transformers} multilingüe (\texttt{paraphrase-
@@ -223,7 +257,7 @@ todas las salidas (incluyendo \texttt{sentence\_embedding} y \texttt{token\_embe
 único \emph{forward pass}, haciendo cierta la afirmación de arriba.
 \end{implBox}
 
-\subsection{Validación estadística: información de Fisher y cota de Cramér--Rao}
+\subsubsection{Validación estadística: información de Fisher y cota de Cramér--Rao}
 \label{sec:crb}
 
 Sea $\hat\theta = (\hat\theta_1,\ldots,\hat\theta_N)$ la muestra de índices de sentimiento del
@@ -302,7 +336,7 @@ simulación, $\mathrm{EES}=100\%$ a pesar de que $\hat\theta$ \emph{rechaza} nor
 alcance real de la verificación.
 \end{warningBox}
 
-\subsection{Correlación con desempeño académico}
+\subsubsection{Correlación con desempeño académico}
 
 Como paso final del análisis, el sistema calcula el coeficiente de correlación de Pearson $r$
 \cite{Pearson1896} entre $\hat\theta_i$ y la calificación $c_i$ de cada alumno, junto con su
@@ -313,7 +347,7 @@ motivación extrínseca. El sistema clasifica la fuerza de la asociación en umb
 fuerte, $|r|\ge 0.3$ moderada, $|r|<0.3$ débil) y explícitamente reporta cuando la correlación no
 es significativa, sin forzar una narrativa de riesgo donde no hay evidencia estadística.
 
-\section{Resultados ilustrativos (simulación)}
+\section{Illustrative example}
 \label{sec:resultados}
 
 \begin{warningBox}[title={Estas figuras son simulación, no datos de curso}]
@@ -371,33 +405,44 @@ ilustrar cómo se lee esta gráfica en la interfaz real.}
 
 \FloatBarrier
 
-\section{Discusión y limitaciones}
+\section{Impact}
+\label{sec:impacto}
 
-El sistema es una herramienta de apoyo a la decisión docente, no un instrumento diagnóstico
-automatizado. El índice $\hat\theta$ depende del modelo de embeddings elegido, de la familia y
-nivel de la wavelet, y del tamaño de la encuesta; con $N<30$ las estimaciones bootstrap de
-varianza son inestables y el propio sistema advierte de ello en la interfaz. Las
-interpretaciones textuales que genera el módulo \texttt{interpretacion.py} son sugerencias de
-lectura, no conclusiones definitivas, y deben cotejarse con el criterio del docente y, cuando
-el caso lo amerite, con apoyo psicopedagógico institucional. Como se documentó en
-\cref{sec:crb}, la verificación de Cramér--Rao certifica la coherencia estadística de
-$\bar\theta$ bajo el modelo supuesto, no la calidad de $\hat\theta$ como medida de sentimiento;
-esa segunda pregunta —la que de verdad importaría validar— queda abierta y requeriría
+El sistema apunta a un problema genérico de docencia (no solo de un curso o institución): la
+señal cualitativa de una encuesta de retroalimentación abierta rara vez se analiza con la misma
+rigurosidad que la señal cuantitativa de calificaciones, a pesar de estar disponible en
+prácticamente cualquier curso. Al empaquetar embeddings de token, DWT y verificación
+Fisher/Cramér--Rao en un pipeline reproducible con interfaz interactiva, el sistema baja el
+costo de entrada para que un docente sin formación en NLP o teoría de la estimación pueda
+producir y —sobre todo— \emph{interpretar correctamente} un índice de sentimiento agregado por
+grupo, incluyendo cuándo \emph{no} confiar en él. Esa última parte es, en la práctica, el
+componente menos común en herramientas similares: la mayoría de los tableros de analítica
+educativa reportan una cifra sin decir qué garantiza matemáticamente esa cifra ni qué no.
+
+El límite honesto al reuso inmediato es el que ya se documentó en las secciones anteriores: el
+índice $\hat\theta$ depende del modelo de embeddings elegido, de la familia y nivel de la
+wavelet, y del tamaño de la encuesta; con $N<30$ las estimaciones bootstrap de varianza son
+inestables y el propio sistema advierte de ello en la interfaz. Las interpretaciones textuales
+que genera el módulo \texttt{interpretacion.py} son sugerencias de lectura, no conclusiones
+definitivas, y deben cotejarse con el criterio del docente y, cuando el caso lo amerite, con
+apoyo psicopedagógico institucional. Como se documentó en \cref{sec:crb}, la verificación de
+Cramér--Rao certifica la coherencia estadística de $\bar\theta$ bajo el modelo supuesto, no la
+calidad de $\hat\theta$ como medida de sentimiento; esa segunda pregunta —la que de verdad
+importaría validar para justificar adopción institucional— queda abierta y requeriría
 comparación externa (anotación humana, u otra pipeline de extracción) sobre datos reales de
-curso, algo que este artículo deliberadamente no reporta.
+curso, algo que este artículo deliberadamente no reporta. Mientras esa validación no exista, el
+reuso responsable del sistema es como herramienta exploratoria y de apoyo, no como criterio
+único de decisión sobre un alumno.
 
-\begin{implBox}
-Interfaz Streamlit (\texttt{app.py}) con cuatro páginas modulares
-(\texttt{pages/carga.py}, \texttt{pages/metricas.py}, \texttt{pages/sentimiento.py},
-\texttt{pages/validacion.py}); \texttt{sentence-transformers} para embeddings,
-\texttt{PyWavelets} para la DWT, \texttt{scipy.stats} para Shapiro--Wilk y correlación de
-Pearson, \texttt{plotly} para visualización interactiva (incluyendo histograma bootstrap de
-$\bar\theta$ con bandas $\pm\sqrt{\mathrm{CRB}}$, comparación de varianzas, y gráfica Q--Q de
-$\hat\theta$ contra la normal). Código y datos de ejemplo en
-\href{https://github.com/Gabriel44svg/Galindo-C.-J.-y-Villafuerte-C.-G.-2026-.-SIAMDA}{github.com/Gabriel44svg/Galindo-C.-J.-y-Villafuerte-C.-G.-2026-.-SIAMDA}.
+\begin{implBox}[title=Reuso]
+Código, datos de ejemplo, 22 pruebas automatizadas (\texttt{pytest}, ejecutadas en CI en cada
+\emph{push}) y licencia MIT en
+\href{https://github.com/Gabriel44svg/Galindo-C.-J.-y-Villafuerte-C.-G.-2026-.-SIAMDA}{github.com/Gabriel44svg/\ldots-SIAMDA}
+(véase también el \cref{tab:metadata}). Los detalles de arquitectura y dependencias están en la
+\cref{sec:arquitectura}.
 \end{implBox}
 
-\section{Conclusión}
+\section{Conclusions}
 
 Este sistema integra dos señales de un curso —calificaciones y respuestas abiertas de
 encuesta— bajo un mismo tablero, y añade a la segunda una métrica reproducible ($\hat\theta$,
@@ -407,6 +452,11 @@ gaussiano y Laplaciano). El resultado es un sistema de alerta temprana que hace 
 vez de impresionista, el vínculo entre el tono de las respuestas de un grupo y su desempeño, y
 que documenta honestamente qué certifica su capa estadística y qué no. Queda como trabajo futuro
 la validación de $\hat\theta$ contra anotación humana sobre datos reales de curso.
+
+\section*{Declaration of competing interest}
+
+Los autores declaran no tener conflictos de interés conocidos que pudieran haber influido en el
+trabajo reportado en este artículo.
 
 \begin{thebibliography}{9}
 
