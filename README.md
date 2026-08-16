@@ -1,4 +1,4 @@
-# 📊 SIAMDA: Multiresolution Analytical & Performance Framework
+#  SIAMDA: Multiresolution Analytical & Performance Framework
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.20+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
@@ -6,14 +6,14 @@
 ![Wavelets](https://img.shields.io/badge/Math-PyWavelets-5C3EE8?style=for-the-badge)
 ![Plotly](https://img.shields.io/badge/Plotly-Interactive_Viz-3F4F75?style=for-the-badge&logo=plotly&logoColor=white)
 
-## 📌 Project Overview
+##  Project Overview
 **SIAMDA** (Sistema Integrado de Análisis Multiresolución y Desempeño Académico) is an advanced stochastic and analytical framework. It integrates Natural Language Processing (NLP) with Discrete Wavelet Transforms (DWT) to model and evaluate performance metrics and textual sentiment.
 
 Developed as part of a formal research initiative (co-authored with Dr. Julio César Galindo López, 2026), this tool goes beyond simple dashboards by incorporating rigorous statistical validation, calculating Fisher Information and the Cramér-Rao Bound (CRB) to prove the efficiency of its estimators.
 
 ---
 
-## 🧠 Core Architecture & Mathematical Pipeline
+##  Core Architecture & Mathematical Pipeline
 
 The system is modularized into distinct analytical pipelines:
 
@@ -28,7 +28,7 @@ The system is modularized into distinct analytical pipelines:
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 | Component | Library / Framework |
 | :--- | :--- |
@@ -40,7 +40,7 @@ The system is modularized into distinct analytical pipelines:
 
 ---
 
-## 🚀 Setup & Local Execution
+##  Setup & Local Execution
 
 ### Prerequisites
 * Python 3.10+
