@@ -234,27 +234,44 @@ def interpretar_crb(eficiencia: float, shapiro_p: float, N: int) -> str:
     msgs = []
 
     # Eficiencia
+    # Nota importante: bajo el modelo gaussiano, la MEDIA MUESTRAL es siempre el
+    # estimador insesgado de varianza mínima de μ (Lehmann-Scheffé) — EES≈1 es
+    # lo esperable por construcción cuando la muestra se comporta como gaussiana,
+    # no un logro del pipeline NLP-Wavelet. Este chequeo compara, en esencia, la
+    # fórmula plug-in σ̂²/N contra una reestimación por bootstrap de la MISMA
+    # cantidad sobre los MISMOS datos; NO compara θ̂ contra ninguna alternativa
+    # de extracción de información del texto. Una EES baja es evidencia de que
+    # la muestra de θ̂ se aparta del comportamiento gaussiano well-behaved
+    # (colas pesadas, outliers, N chico) — no evidencia sobre la calidad del
+    # pipeline de embeddings o de la descomposición wavelet.
     if eficiencia >= 0.95:
         msgs.append(
-            f" <b>Estimador altamente eficiente</b> (EES = {eficiencia:.1%}). "
-            "La varianza empírica del estimador es prácticamente igual a la cota teórica "
-            "de Cramér-Rao. No es posible reducir significativamente el error con el mismo N."
+            f" <b>Media muestral consistente con el modelo gaussiano</b> (EES = {eficiencia:.1%}). "
+            "La varianza bootstrap de θ̄ coincide con la cota de Cramér-Rao calculada por el "
+            "método plug-in. Esto es lo esperado cuando θ̂ se comporta como una muestra "
+            "razonablemente gaussiana; no certifica que el pipeline NLP-Wavelet extraiga toda "
+            "la información disponible del texto — para eso se necesitaría comparar θ̂ contra "
+            "una medida de sentimiento alternativa (léxica, o anotación humana) sobre el mismo texto."
         )
         tipo = "bueno"
     elif eficiencia >= 0.80:
         msgs.append(
             f" <b>Eficiencia moderada</b> (EES = {eficiencia:.1%}). "
-            "El estimador está razonablemente cerca de la cota, pero existe margen de mejora. "
-            "Considera aumentar N, cambiar el modelo de embeddings, o ajustar el nivel wavelet J."
+            "La varianza bootstrap se aparta algo de la cota plug-in; puede deberse a asimetría "
+            "moderada en la distribución de θ̂ o a un N todavía chico para que el bootstrap sea "
+            "estable. Revisa el histograma bootstrap y el Q-Q plot antes de concluir nada sobre "
+            "el pipeline de embeddings."
         )
         tipo = "atención"
     else:
         msgs.append(
-            f" <b>Baja eficiencia</b> (EES = {eficiencia:.1%}). "
-            "El estimador supera notablemente la cota de Cramér-Rao. "
-            "El pipeline NLP-Wavelet actual no extrae toda la información disponible en los textos. "
-            "Se recomienda: (1) aumentar N, (2) usar un modelo de embeddings más potente, "
-            "(3) aumentar el nivel de descomposición wavelet."
+            f" <b>Discrepancia grande entre bootstrap y cota plug-in</b> (EES = {eficiencia:.1%}). "
+            "La varianza empírica del estimador excede notablemente la cota de Cramér-Rao "
+            "gaussiana. Esto típicamente señala que la muestra de θ̂ tiene colas pesadas, "
+            "outliers, o N insuficiente para que el supuesto gaussiano (y por tanto esta cota) "
+            "sea aplicable — usa el modelo Laplaciano (más robusto) como referencia en ese caso. "
+            "Esta cifra por sí sola <b>no mide</b> si el pipeline NLP-Wavelet extrae información "
+            "del texto; eso requeriría una comparación externa (p. ej. contra anotación humana)."
         )
         tipo = "riesgo"
 

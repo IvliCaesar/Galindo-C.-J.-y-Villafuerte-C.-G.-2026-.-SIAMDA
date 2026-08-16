@@ -60,10 +60,17 @@ $$F(\theta) = -\mathbb{E}\!\left[\frac{\partial^2}{\partial \theta^2} \ln p(X;\t
 $$F(\mu) = \frac{N}{\sigma^2}, \qquad \text{CRB} = \frac{\sigma^2}{N}$$
 
 Un estimador es **eficiente** si alcanza la cota exactamente. El estimador de media muestral
-$\bar{\theta} = \frac{1}{N}\sum_i \hat{\theta}_i$ es eficiente bajo el modelo gaussiano.
+$\bar{\theta} = \frac{1}{N}\sum_i \hat{\theta}_i$ es **siempre** eficiente bajo el modelo
+gaussiano con $\sigma^2$ conocida (Lehmann-Scheffé) — esto no depende de qué tan bien el
+pipeline NLP-Wavelet capture sentimiento real, es una propiedad de la media muestral como
+estimador de sí misma.
 
-**Relevancia para SIAMDA:** certifica matemáticamente si el pipeline NLP-Wavelet extrae
-la máxima información posible del texto de las encuestas.
+**Relevancia para SIAMDA:** esta comparación certifica que la media reportada $\bar\theta$
+y su intervalo de confianza son estadísticamente coherentes bajo el modelo gaussiano
+(bootstrap ≈ cota teórica). **No** certifica que el pipeline NLP-Wavelet extraiga la máxima
+información posible del texto de las encuestas — verificar eso exigiría comparar $\hat\theta$
+contra una medida de sentimiento alternativa (léxica o de anotación humana) sobre el mismo
+texto, algo que este módulo no hace.
         """)
 
     st.divider()

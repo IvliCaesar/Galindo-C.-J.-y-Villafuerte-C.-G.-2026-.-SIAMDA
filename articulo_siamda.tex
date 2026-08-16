@@ -27,7 +27,7 @@
   linkcolor=blue!50!black,
   citecolor=red!55!black,
   urlcolor=teal!60!black,
-  pdftitle={SIAMDA: Sistema Integrado de Análisis Multirresolución y Desempeño Académico},
+  pdftitle={Sistema Integrado de Análisis Multirresolución y Desempeño Académico},
   pdfauthor={César Galindo López y Gabriel Villafuerte C.}
 }
 
@@ -39,7 +39,7 @@
 \definecolor{ihesgold}{RGB}{160,120,40}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\textsc{SIAMDA}}
+\fancyhead[L]{\textsc{Análisis Multirresolución y Desempeño Académico}}
 \fancyhead[R]{\textsc{Galindo López \& Villafuerte C.}}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.35pt}
@@ -66,7 +66,7 @@
   attach boxed title to top left={yshift=-2mm,xshift=4mm},
   boxed title style={colback=violet!12,colframe=violet!50!black,boxrule=0.5pt},#1}
 
-\title{\vspace{-1.5cm}\textbf{\Large SIAMDA}\\[2pt]\large Sistema Integrado de Análisis Multirresolución y Desempeño Académico}
+\title{\vspace{-1.5cm}\textbf{\Large Sistema Integrado de Análisis Multirresolución y Desempeño Académico}}
 \author{César Galindo López \\ \small Universidad Panamericana \textperiodcentered\ Facultad de Empresariales, Ciudad UP
   \and Gabriel Villafuerte C. \\ \small \href{https://github.com/Gabriel44svg}{github.com/Gabriel44svg}}
 \date{\small 2026}
@@ -134,19 +134,26 @@ es decir, un alumno está en riesgo si su calificación cae por debajo del umbra
 
 \subsection{Embeddings y descomposición}
 
-Para cada alumno $i$, sea $x_i\in\mathbb{R}^d$ el embedding semántico de su respuesta de texto,
-obtenido con un modelo de \emph{sentence-transformers} multilingüe (\texttt{paraphrase-
-multilingual-MiniLM-L12-v2}, $d=384$), normalizado a norma unitaria. Tratando $x_i$ como una
-señal discreta en $\mathbb{R}^d$ —indexada por las $384$ coordenadas del embedding, en el orden
-en que el modelo las produce—, se aplica la transformada discreta de onduleta (DWT) con familia
-Daubechies~4 y nivel de descomposición $J=3$ por defecto (acotado por
-\texttt{pywt.dwt\_max\_level}$(d,\text{wavelet})$ si $d$ fuera más pequeño):
+Para cada alumno $i$, el modelo de \emph{sentence-transformers} multilingüe (\texttt{paraphrase-
+multilingual-MiniLM-L12-v2}, dimensión $d=384$) produce, en un solo \emph{forward pass}: el
+embedding de oración $x_i\in\mathbb{R}^d$ (normalizado a norma unitaria) y, para cada token
+$t=1,\ldots,L_i$ de la respuesta, un embedding contextual $u_{i,t}\in\mathbb{R}^d$. A partir de
+estos se construye una señal escalar \emph{indexada por posición del token en el texto}
+—un eje con adyacencia temporal genuina, a diferencia de las coordenadas del embedding—,
+proyectando cada token sobre la dirección semántica global de la respuesta:
 \[
-\mathrm{wavedec}(x_i, J) = \big(c^{(i)}_A,\ c^{(i)}_{D,1},\ \ldots,\ c^{(i)}_{D,J}\big),
+s_i(t) \;=\; \langle u_{i,t},\, x_i\rangle, \qquad t=1,\ldots,L_i.
 \]
-donde $c^{(i)}_A$ son los coeficientes de aproximación (contenido semántico global, de baja
-frecuencia) y $c^{(i)}_{D,j}$ los coeficientes de detalle en el nivel $j$ (variación local, de
-alta frecuencia). Se definen las energías
+Sobre esta señal 1D se aplica la transformada discreta de onduleta (DWT) con familia
+Daubechies~4 y nivel de descomposición $J=3$ por defecto, acotado en la práctica por
+$\min_i \texttt{pywt.dwt\_max\_level}(L_i,\text{wavelet})$ —la respuesta más corta del lote,
+no una dimensión fija—:
+\[
+\mathrm{wavedec}(s_i, J) = \big(c^{(i)}_A,\ c^{(i)}_{D,1},\ \ldots,\ c^{(i)}_{D,J}\big),
+\]
+donde $c^{(i)}_A$ son los coeficientes de aproximación (tendencia global de la respuesta, de
+baja frecuencia \emph{en la posición}) y $c^{(i)}_{D,j}$ los coeficientes de detalle en el nivel
+$j$ (fluctuación local palabra a palabra, de alta frecuencia). Se definen las energías
 \[
 E^{\mathrm{apr}}_i = \big\lVert c^{(i)}_A \big\rVert_2^2,
 \qquad
@@ -154,28 +161,26 @@ E^{\mathrm{det}}_i = \sum_{j=1}^{J} \big\lVert c^{(i)}_{D,j} \big\rVert_2^2 .
 \]
 
 \begin{remark}
-La energía de aproximación captura contenido contextual estable (ideas organizadas,
-vocabulario consistente); la energía de detalle actúa como proxy de variación local abrupta en
-el embedding, interpretada aquí como carga emocional aguda en el texto.
+La energía de aproximación captura la tendencia semántica global de la respuesta (ideas
+organizadas, sentido consistente palabra tras palabra); la energía de detalle captura
+fluctuaciones locales bruscas —palabras que se apartan del sentido general de la respuesta—,
+interpretadas aquí como carga emocional puntual.
 \end{remark}
 
-\begin{warningBox}[title=Hueco metodológico: la DWT actúa sobre un eje sin orden natural]
-A diferencia de una señal temporal o de una secuencia de tokens, las $384$ coordenadas de un
-embedding de \emph{sentence-transformers} no tienen una noción intrínseca de adyacencia o
-frecuencia: son ejes de un espacio de características aprendido, y su orden es un artefacto de
-implementación del modelo, no una variable de la que el contenido semántico dependa
-continuamente. La DWT, en cambio, sí depende esencialmente del orden: permutar las coordenadas
-de $x_i$ antes de aplicar \texttt{wavedec} produce en general valores distintos de
-$E^{\mathrm{apr}}_i$ y $E^{\mathrm{det}}_i$ para el \emph{mismo} contenido semántico. Por lo
-tanto, la lectura ``aproximación = contenido estable, detalle = carga emocional local'' es una
-interpretación tomada por préstamo del uso estándar de la DWT en señales con estructura
-temporal/espacial genuina, no una propiedad derivada del significado de las coordenadas del
-embedding. Esto no invalida $\hat\theta_i$ como estadístico reproducible —para un orden de
-coordenadas fijo (el que produce el modelo), el índice es determinista y bien definido—, pero
-sí significa que su interpretación causal como ``carga emocional'' no está justificada por la
-matemática de la transformada en sí, sino que es una hipótesis de trabajo que requeriría
-validación externa (p.\,ej.\ contra anotación humana de las mismas respuestas) para sostenerse.
-\end{warningBox}
+\begin{implBox}[title=Corrección de diseño]
+En una versión anterior de este pipeline, la DWT se aplicaba directamente sobre las $384$
+coordenadas de $x_i$, tratándolas como si fueran una señal temporal. Esas coordenadas son ejes
+de un espacio de características aprendido sin orden ni adyacencia intrínsecos: permutarlas no
+cambia el significado del texto, pero sí cambiaba $E^{\mathrm{apr}}_i$ y $E^{\mathrm{det}}_i$
+bajo esa versión, de modo que la lectura ``aproximación = contenido estable, detalle = emoción''
+no estaba justificada por la matemática de la transformada. La formulación de arriba —proyectar
+cada token sobre el embedding de oración y aplicar la DWT sobre la \emph{posición del token}—
+usa un eje con estructura secuencial genuina, para el cual la separación de la DWT en
+tendencia global (aproximación) y fluctuación local (detalle) sí tiene el respaldo habitual de
+la teoría de wavelets. Código: \texttt{processing/nlp\_wavelet.py}
+(\texttt{obtener\_embeddings\_token}, \texttt{señal\_por\_posicion},
+\texttt{aplicar\_dwt\_posicional}).
+\end{implBox}
 
 \subsection{Índice de sentimiento}
 
@@ -250,12 +255,13 @@ datos: la fórmula normal con $\hat\sigma^2$ plug-in, y el remuestreo. Que ambas
 $\approx 1$) es entonces, en gran medida, una prueba de consistencia numérica entre bootstrap y
 la fórmula asintótica de la varianza de la media —algo que ocurre para casi cualquier muestra
 razonablemente grande, independientemente de qué tan bien el pipeline de embeddings y wavelets
-capture sentimiento real—, y \emph{no} es evidencia de que ``el pipeline NLP-wavelet extrae la
-máxima información posible del texto'', como sugiere el texto de interpretación de la interfaz
-(\texttt{interpretar\_crb} en \texttt{interpretacion.py}). Verificar eso último exigiría comparar
-$\hat\theta$ contra una pipeline de extracción de características alternativa (o contra
-anotación humana) sobre el mismo texto, no solo verificar que la media muestral de $\hat\theta$
-es un buen estimador de sí misma.
+capture sentimiento real—, y \emph{no} es evidencia de que el pipeline NLP-wavelet extraiga la
+máxima información posible del texto. Verificar eso último exigiría comparar $\hat\theta$ contra
+una pipeline de extracción de características alternativa (o contra anotación humana) sobre el
+mismo texto, no solo verificar que la media muestral de $\hat\theta$ es un buen estimador de sí
+misma. Los textos de interpretación de la interfaz (\texttt{interpretar\_crb} en
+\texttt{interpretacion.py}, y el ``Marco Teórico'' de \texttt{validacion.py}) sobreclamaban
+exactamente esto y ya fueron corregidos para reflejar el alcance real de la verificación.
 \end{warningBox}
 
 \section{Correlación con desempeño académico}

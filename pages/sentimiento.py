@@ -60,7 +60,8 @@ def render():
                                help="db4 (Daubechies-4) es la más recomendada para señales de lenguaje natural.")
     with c2:
         nivel = st.slider("Nivel de descomposición J:", 1, 5, 3,
-                          help="Mayor J = más resolución temporal. J=3 es el punto óptimo para embeddings de 384 dims.")
+                          help="Mayor J = más resolución temporal sobre la señal por posición de token. "
+                               "El nivel efectivo queda acotado por la respuesta más corta del lote.")
     with c3:
         modelo_emb = st.selectbox(
             "Modelo de embeddings:",
@@ -73,11 +74,14 @@ def render():
     st.markdown(
         "<div style='background:#161b22;border:1px solid #30363d;border-radius:6px;"
         "padding:0.7rem 1rem;font-size:0.82rem;color:#8b949e;margin-bottom:0.5rem;'>"
-        "ℹ <b>¿Cómo funciona?</b> Cada respuesta de texto se convierte en un vector numérico "
-        "(embedding) usando un modelo de lenguaje. Ese vector se descompone con la "
-        "Transformada Discreta de Onduleta (DWT): los <b>coeficientes de aproximación</b> "
-        "capturan el significado global y los <b>coeficientes de detalle</b> capturan "
-        "la carga emocional localizada. El ratio entre ambas energías define el índice θ̂."
+        "ℹ <b>¿Cómo funciona?</b> Cada respuesta de texto se convierte en un embedding "
+        "contextual por palabra (token) usando un modelo de lenguaje, y cada palabra se "
+        "proyecta sobre el sentido global de la respuesta, dando una señal numérica indexada "
+        "por posición en el texto. Esa señal se descompone con la Transformada Discreta de "
+        "Onduleta (DWT): los <b>coeficientes de aproximación</b> capturan la tendencia global "
+        "de la respuesta y los <b>coeficientes de detalle</b> capturan fluctuaciones locales "
+        "palabra a palabra (candidatas a carga emocional puntual). El ratio entre ambas "
+        "energías define el índice θ̂."
         "</div>",
         unsafe_allow_html=True,
     )
@@ -249,7 +253,7 @@ def render():
         fig_heat.update_layout(
             **PLOTLY_LAYOUT,
             title="Coeficientes de detalle nivel 1 (carga emocional aguda)",
-            xaxis_title="Dimensión de embedding", yaxis_title="Alumno",
+            xaxis_title="Posición en la respuesta (tokens)", yaxis_title="Alumno",
         )
         st.plotly_chart(fig_heat, use_container_width=True)
         st.markdown(
