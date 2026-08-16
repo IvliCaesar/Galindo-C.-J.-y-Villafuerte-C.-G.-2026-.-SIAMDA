@@ -77,7 +77,7 @@
   boxed title style={colback=violet!12,colframe=violet!50!black,boxrule=0.5pt},#1}
 
 \title{\vspace{-1.5cm}\textbf{\Large Sistema Integrado de Análisis Multirresolución y Desempeño Académico}\\[2pt]
-\large Un índice de sentimiento certificado estadísticamente, vía embeddings y transformada wavelet}
+\large Un índice de sentimiento con verificación estadística explícita de su eficiencia —y de sus límites—, vía embeddings y transformada wavelet}
 \author{César Galindo López \\ \small Universidad Panamericana \textperiodcentered\ Facultad de Empresariales, Ciudad UP
   \and Gabriel Villafuerte C. \\ \small \href{https://github.com/Gabriel44svg}{github.com/Gabriel44svg}}
 \date{\small 2026}
@@ -225,8 +225,11 @@ cualquier estimador insesgado de $\mu$:
 \[
 \mathrm{Var}(\bar\theta) \;\ge\; \frac{1}{F(\mu)},
 \qquad
-F(\mu) = -\,\mathbb{E}\!\left[\frac{\partial^2}{\partial\mu^2}\ln p(X;\mu)\right].
+F(\mu) = -\,\mathbb{E}\!\left[\frac{\partial^2}{\partial\mu^2}\ln p(X;\mu)\right],
 \]
+donde $X=(\hat\theta_1,\ldots,\hat\theta_N)$ denota la muestra completa (de modo que
+$p(X;\mu)=\prod_i p(\hat\theta_i;\mu)$ y $F(\mu)$ ya incorpora el factor $N$, como en las
+fórmulas explícitas de abajo).
 
 \begin{summaryBox}
 \textbf{Modelo gaussiano.} Bajo $\theta\sim\mathcal N(\mu,\sigma^2)$, con
@@ -313,7 +316,8 @@ gráficas que el sistema produce y de exhibir numéricamente el punto de la
 simulación, no observada. Código de generación: \texttt{generar\_figuras\_articulo.py}.
 \end{warningBox}
 
-Simulamos $N=60$ respuestas de longitud variable ($L_i\in[12,55]$ tokens), cada una con una
+Simulamos $N=60$ respuestas de longitud variable ($L_i$ entero uniforme en $\{12,\ldots,54\}$
+tokens), cada una con una
 ``intensidad emocional'' $e_i\sim\mathrm{Gamma}(2,\,0.5)$ que controla la amplitud de ráfagas
 locales insertadas en una tendencia de caminata aleatoria (\cref{fig:señal}), y una calificación
 simulada $c_i = \mathrm{clip}(92 - 9\,e_i + \eta_i,\,40,\,100)$ con $\eta_i\sim\mathcal
