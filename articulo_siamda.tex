@@ -136,9 +136,11 @@ es decir, un alumno está en riesgo si su calificación cae por debajo del umbra
 
 Para cada alumno $i$, sea $x_i\in\mathbb{R}^d$ el embedding semántico de su respuesta de texto,
 obtenido con un modelo de \emph{sentence-transformers} multilingüe (\texttt{paraphrase-
-multilingual-MiniLM-L12-v2}), normalizado a norma unitaria. Tratando $x_i$ como una señal
-discreta en $\mathbb{R}^d$, se aplica la transformada discreta de onduleta (DWT) con familia
-Daubechies~4 y nivel de descomposición $J$:
+multilingual-MiniLM-L12-v2}, $d=384$), normalizado a norma unitaria. Tratando $x_i$ como una
+señal discreta en $\mathbb{R}^d$ —indexada por las $384$ coordenadas del embedding, en el orden
+en que el modelo las produce—, se aplica la transformada discreta de onduleta (DWT) con familia
+Daubechies~4 y nivel de descomposición $J=3$ por defecto (acotado por
+\texttt{pywt.dwt\_max\_level}$(d,\text{wavelet})$ si $d$ fuera más pequeño):
 \[
 \mathrm{wavedec}(x_i, J) = \big(c^{(i)}_A,\ c^{(i)}_{D,1},\ \ldots,\ c^{(i)}_{D,J}\big),
 \]
@@ -157,6 +159,24 @@ vocabulario consistente); la energía de detalle actúa como proxy de variación
 el embedding, interpretada aquí como carga emocional aguda en el texto.
 \end{remark}
 
+\begin{warningBox}[title=Hueco metodológico: la DWT actúa sobre un eje sin orden natural]
+A diferencia de una señal temporal o de una secuencia de tokens, las $384$ coordenadas de un
+embedding de \emph{sentence-transformers} no tienen una noción intrínseca de adyacencia o
+frecuencia: son ejes de un espacio de características aprendido, y su orden es un artefacto de
+implementación del modelo, no una variable de la que el contenido semántico dependa
+continuamente. La DWT, en cambio, sí depende esencialmente del orden: permutar las coordenadas
+de $x_i$ antes de aplicar \texttt{wavedec} produce en general valores distintos de
+$E^{\mathrm{apr}}_i$ y $E^{\mathrm{det}}_i$ para el \emph{mismo} contenido semántico. Por lo
+tanto, la lectura ``aproximación = contenido estable, detalle = carga emocional local'' es una
+interpretación tomada por préstamo del uso estándar de la DWT en señales con estructura
+temporal/espacial genuina, no una propiedad derivada del significado de las coordenadas del
+embedding. Esto no invalida $\hat\theta_i$ como estadístico reproducible —para un orden de
+coordenadas fijo (el que produce el modelo), el índice es determinista y bien definido—, pero
+sí significa que su interpretación causal como ``carga emocional'' no está justificada por la
+matemática de la transformada en sí, sino que es una hipótesis de trabajo que requeriría
+validación externa (p.\,ej.\ contra anotación humana de las mismas respuestas) para sostenerse.
+\end{warningBox}
+
 \subsection{Índice de sentimiento}
 
 El índice de sentimiento del alumno $i$ se define como
@@ -171,14 +191,14 @@ indican energía concentrada en los detalles (alta variabilidad emocional locali
 \section{Validación estadística: información de Fisher y cota de Cramér--Rao}
 
 Sea $\hat\theta = (\hat\theta_1,\ldots,\hat\theta_N)$ la muestra de índices de sentimiento del
-grupo, tratada como $N$ observaciones i.i.d.\ de un parámetro poblacional $\theta$ (el
-sentimiento promedio del grupo), y $\bar\theta = \frac1N\sum_i \hat\theta_i$ su estimador de
-media muestral. La cota de Cramér--Rao acota inferiormente la varianza de cualquier estimador
-insesgado de $\theta$:
+grupo (los datos, no estimadores individuales de nada), tratada como $N$ observaciones
+i.i.d.\ de una distribución con parámetro de localización $\mu$ (el sentimiento promedio del
+grupo), y $\bar\theta = \frac1N\sum_i \hat\theta_i$ el estimador de media muestral de $\mu$. La
+cota de Cramér--Rao acota inferiormente la varianza de cualquier estimador insesgado de $\mu$:
 \[
-\mathrm{Var}(\bar\theta) \;\ge\; \frac{1}{F(\theta)},
+\mathrm{Var}(\bar\theta) \;\ge\; \frac{1}{F(\mu)},
 \qquad
-F(\theta) = -\,\mathbb{E}\!\left[\frac{\partial^2}{\partial\theta^2}\ln p(X;\theta)\right].
+F(\mu) = -\,\mathbb{E}\!\left[\frac{\partial^2}{\partial\mu^2}\ln p(X;\mu)\right].
 \]
 
 \begin{summaryBox}
@@ -194,6 +214,10 @@ y $\hat b = \frac1N\sum_i |\hat\theta_i-\hat\mu|$:
 F(\mu) = \frac{N}{\hat b^2}, \qquad
 \mathrm{CRB}_\mu = \frac{\hat b^2}{N}.
 \]
+A diferencia del caso gaussiano, donde la media muestral alcanza la cota \emph{exactamente} para
+todo $N$, la mediana muestral es el EMV de $\mu$ bajo el modelo Laplaciano y solo alcanza la
+cota \emph{asintóticamente} ($N\to\infty$); para $N$ finito su varianza puede exceder
+$\mathrm{CRB}_\mu$.
 \textbf{Eficiencia empírica del estimador (EES).} Con $\widehat{\mathrm{Var}}(\bar\theta)$
 estimada por \emph{bootstrap} ($B=500$ remuestreos con reemplazo):
 \[
@@ -212,6 +236,27 @@ muestral} de $\hat\theta$ de ser un estimador óptimo de sí misma bajo un model
 supuesto. No certifica que $\hat\theta$ mida ``sentimiento real'' correctamente, ni sustituye
 una validación externa (p.\,ej.\ contra anotación humana) del índice.
 \end{remark}
+
+\begin{warningBox}[title=Hueco: qué NO certifica esta verificación]
+Bajo el modelo gaussiano con $\sigma^2$ desconocida y estimada por $\hat\sigma^2$, la media
+muestral es el estimador insesgado de varianza mínima de $\mu$ \emph{para todo} $N$ (Lehmann--Scheffé),
+con $\mathrm{Var}(\bar\theta)=\sigma^2/N$ exactamente. Es decir, bajo ese modelo la eficiencia es
+$1$ por construcción, no por mérito del pipeline NLP--wavelet: no hay ningún estimador
+alternativo de $\mu$ que pudiera ganarle a la media muestral. La comparación que hace el sistema
+—$\mathrm{CRB}_\mu=\hat\sigma^2/N$ contra $\widehat{\mathrm{Var}}(\bar\theta)$ estimada por
+\emph{bootstrap sobre la misma muestra}— es, en el límite de $N$ grande, una comparación entre
+dos maneras de estimar la \emph{misma} cantidad ($\sigma^2/N$) a partir de los \emph{mismos}
+datos: la fórmula normal con $\hat\sigma^2$ plug-in, y el remuestreo. Que ambas coincidan (EES
+$\approx 1$) es entonces, en gran medida, una prueba de consistencia numérica entre bootstrap y
+la fórmula asintótica de la varianza de la media —algo que ocurre para casi cualquier muestra
+razonablemente grande, independientemente de qué tan bien el pipeline de embeddings y wavelets
+capture sentimiento real—, y \emph{no} es evidencia de que ``el pipeline NLP-wavelet extrae la
+máxima información posible del texto'', como sugiere el texto de interpretación de la interfaz
+(\texttt{interpretar\_crb} en \texttt{interpretacion.py}). Verificar eso último exigiría comparar
+$\hat\theta$ contra una pipeline de extracción de características alternativa (o contra
+anotación humana) sobre el mismo texto, no solo verificar que la media muestral de $\hat\theta$
+es un buen estimador de sí misma.
+\end{warningBox}
 
 \section{Correlación con desempeño académico}
 
