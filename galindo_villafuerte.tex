@@ -211,6 +211,16 @@ tendencia global (aproximación) y fluctuación local (detalle) sí tiene el res
 la teoría de wavelets \cite{Mallat1989}. Código: \texttt{processing/nlp\_wavelet.py}
 (\texttt{obtener\_embeddings\_token}, \texttt{señal\_por\_posicion},
 \texttt{aplicar\_dwt\_posicional}).
+
+Una versión intermedia de \texttt{obtener\_embeddings\_token} —posterior a la corrección
+anterior— sí construía la señal posicional como aquí se describe, pero llamaba
+\texttt{modelo.encode()} \emph{dos veces} (una para el embedding de oración, otra para los
+embeddings de token), es decir dos \emph{forward passes}, mientras el docstring y una versión
+anterior de este párrafo afirmaban que ambas salidas provenían de ``un solo forward pass''.
+Ambas cosas eran ciertas por separado y falsas juntas. La versión actual usa una sola llamada
+con \texttt{output\_value=None}, que sentence-transformers documenta como forma de obtener
+todas las salidas (incluyendo \texttt{sentence\_embedding} y \texttt{token\_embeddings}) de un
+único \emph{forward pass}, haciendo cierta la afirmación de arriba.
 \end{implBox}
 
 \subsection{Validación estadística: información de Fisher y cota de Cramér--Rao}

@@ -18,45 +18,38 @@ from typing import Optional
 
 # ── Embeddings ────────────────────────────────────────────────────────────────
 
-def obtener_embeddings(textos: list[str], modelo_nombre: str = "paraphrase-multilingual-MiniLM-L12-v2") -> np.ndarray:
-    """
-    Genera embeddings de oración usando sentence-transformers.
-    Retorna X ∈ R^{N x d}.
-    """
-    from sentence_transformers import SentenceTransformer
-    modelo = SentenceTransformer(modelo_nombre)
-    embeddings = modelo.encode(textos, show_progress_bar=False, normalize_embeddings=True)
-    return embeddings.astype(np.float32)
-
-
 def obtener_embeddings_token(
     textos: list[str], modelo_nombre: str = "paraphrase-multilingual-MiniLM-L12-v2"
 ) -> tuple[np.ndarray, list[np.ndarray]]:
     """
-    Genera, en una sola pasada del modelo:
+    Genera, en una sola pasada del modelo (una llamada a .encode con
+    output_value=None, que devuelve ambas salidas del mismo forward pass en
+    vez de dos llamadas separadas):
       - X ∈ R^{N x d}: embeddings de oración (normalizados, para el índice de sentimiento).
       - lista de N arrays R^{L_i x d}: embeddings contextuales por token (uno por
         respuesta, longitud L_i variable = número de tokens de esa respuesta,
         sin relleno).
 
-    Ambos provienen del mismo forward pass del modelo, así que no hay costo
-    adicional de inferencia frente a solo pedir el embedding de oración.
+    Una versión anterior llamaba a .encode() dos veces (una por cada salida),
+    es decir dos forward passes, mientras afirmaba aquí y en el artículo que
+    era "un solo forward pass" — ambas cosas eran falsas. Esta versión sí usa
+    una sola llamada.
     """
     from sentence_transformers import SentenceTransformer
     modelo = SentenceTransformer(modelo_nombre)
 
-    X = modelo.encode(textos, show_progress_bar=False, normalize_embeddings=True)
-    X = X.astype(np.float32)
+    salidas = modelo.encode(textos, show_progress_bar=False, output_value=None)
+    # output_value=None regresa, por texto, un dict con 'sentence_embedding' y
+    # 'token_embeddings' (y otras claves internas) de un único forward pass.
 
-    salida_tokens = modelo.encode(
-        textos, show_progress_bar=False, output_value="token_embeddings"
-    )
-    # sentence-transformers regresa, para output_value="token_embeddings", una lista
-    # de tensores (uno por texto) ya recortados a su longitud real (sin padding).
-    tokens_por_texto = []
-    for t in salida_tokens:
-        arr = t.detach().cpu().numpy() if hasattr(t, "detach") else np.asarray(t)
-        tokens_por_texto.append(arr.astype(np.float32))
+    def _a_numpy(t):
+        return t.detach().cpu().numpy() if hasattr(t, "detach") else np.asarray(t)
+
+    X = np.stack([_a_numpy(s["sentence_embedding"]) for s in salidas]).astype(np.float32)
+    normas = np.linalg.norm(X, axis=1, keepdims=True)
+    X = X / np.clip(normas, 1e-12, None)  # normalización a norma unitaria, explícita
+
+    tokens_por_texto = [_a_numpy(s["token_embeddings"]).astype(np.float32) for s in salidas]
 
     return X, tokens_por_texto
 
