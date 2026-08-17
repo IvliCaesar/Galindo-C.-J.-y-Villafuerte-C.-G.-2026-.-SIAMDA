@@ -196,8 +196,9 @@ es decir, un alumno está en riesgo si su calificación cae por debajo del umbra
 \subsubsection{Índice de sentimiento por transformada wavelet}
 \label{sec:indice}
 
-Para cada alumno $i$, el modelo de \emph{sentence-transformers} multilingüe (\texttt{paraphrase-
-multilingual-MiniLM-L12-v2}, dimensión $d=384$) \cite{ReimersGurevych2019} produce, en un solo
+Para cada alumno $i$, el modelo de \emph{sentence-transformers} multilingüe
+(\texttt{paraphrase-\allowbreak multilingual-\allowbreak MiniLM-\allowbreak L12-\allowbreak v2},
+dimensión $d=384$) \cite{ReimersGurevych2019} produce, en un solo
 \emph{forward pass}: el embedding de oración $x_i\in\mathbb{R}^d$ (normalizado a norma unitaria)
 y, para cada token $t=1,\ldots,L_i$ de la respuesta, un embedding contextual
 $u_{i,t}\in\mathbb{R}^d$. A partir de estos se construye una señal escalar \emph{indexada por
@@ -357,7 +358,7 @@ calificaciones son sintéticas, construidas para ejercitar el código real de
 que usa la aplicación— sobre entradas controladas, con el único fin de mostrar cómo se leen las
 gráficas que el sistema produce y de exhibir numéricamente el punto de la
 \cref{sec:crb}. La correlación de la \cref{fig:correlacion} está impuesta por construcción en la
-simulación, no observada. Código de generación: \texttt{generar\_figuras\_articulo.py}.
+simulación, no observada. Código de generación: \path{generar_figuras_articulo.py}.
 \end{warningBox}
 
 Simulamos $N=60$ respuestas de longitud variable ($L_i$ entero uniforme en $\{12,\ldots,54\}$
@@ -405,6 +406,90 @@ ilustrar cómo se lee esta gráfica en la interfaz real.}
 
 \FloatBarrier
 
+\subsection{Análisis de sensibilidad}
+\label{sec:sensibilidad}
+
+Las secciones anteriores \emph{afirman} que $\hat\theta$ depende del tamaño de la muestra, de la
+familia de onduleta y del nivel de descomposición, pero hasta aquí no lo mostraban con números.
+Esta subsección lo hace, ejecutando el mismo código real
+(\texttt{aplicar\_dwt\_posicional}, \texttt{calcular\_indice\_sentimiento},
+\texttt{calcular\_cramer\_rao}) sobre variaciones controladas de la simulación anterior
+(\path{generar_figuras_sensibilidad.py}). Como el resto de esta sección, son simulaciones,
+no datos de curso.
+
+\textbf{Sensibilidad a $N$.} Para $N\in\{8,10,15,20,30,40,60,100,150,250\}$, con 20 réplicas
+independientes por valor de $N$, medimos el ancho del intervalo bootstrap
+$2\sqrt{\widehat{\mathrm{Var}}(\bar\theta)}$ y el EES (\cref{fig:sens-N}). El panel derecho
+confirma la afirmación de la \cref{sec:impacto}: el ancho del intervalo decrece de forma
+consistente y su variabilidad entre réplicas es mucho mayor para $N<30$ que para $N$ grande. El
+panel izquierdo, en cambio, revela algo que la \cref{sec:crb} ya anticipaba: el EES se mantiene
+entre $0.96$ y $1.00$ en \emph{todo} el rango de $N$ probado, sin una tendencia clara de mejora
+--- consistente con que, bajo el modelo gaussiano, la eficiencia no mide qué tan bueno es el
+pipeline, sino una propiedad de la media muestral que se cumple casi siempre.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{figs/fig_sensibilidad_N.pdf}
+\caption{Sensibilidad a $N$ (20 réplicas por valor de $N$). Izquierda: EES se mantiene alto
+independientemente de $N$. Derecha: el ancho del intervalo bootstrap sí decrece y se estabiliza
+con $N$, y es notablemente más disperso entre réplicas para $N<30$.}
+\label{fig:sens-N}
+\end{figure}
+
+\textbf{Sensibilidad a la familia de onduleta.} Sobre las mismas 60 señales simuladas, calculamos
+$\hat\theta$ con cada una de las seis familias que ofrece la interfaz real
+(\texttt{WAVELETS\_DISPONIBLES} en \texttt{pages/sentimiento.py}): db4, db2, haar, sym4, coif2 y
+dmey (\cref{fig:sens-familia}). Los resultados de db4, sym4, coif2 y dmey coinciden de cerca
+entre sí (correlación de Pearson contra db4 entre $0.72$ y $0.80$); db2 se desvía moderadamente
+(correlación $0.77$, pero con una cola de valores atípicos positivos); \textbf{haar es
+cualitativamente distinta}: su mediana se acerca a cero y su rango intercuartílico cruza el signo,
+con correlación de solo $0.50$ contra db4. Esto tiene una explicación directa: haar es la familia
+con el filtro más corto (longitud 2), por lo que su separación aproximación/detalle captura una
+noción de ``local'' mucho más fina y ruidosa que las familias con filtros más largos. En la
+práctica, esto significa que la elección por defecto (db4) no es intercambiable con \emph{todas}
+las opciones del menú: cambiar a haar puede cambiar el signo del índice reportado para el mismo
+texto.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=0.85\linewidth]{figs/fig_sensibilidad_familia.pdf}
+\caption{Distribución de $\hat\theta$ para las seis familias de onduleta de la interfaz, sobre
+las mismas 60 señales simuladas. db4/sym4/coif2/dmey concuerdan de cerca; haar --el filtro más
+corto-- es cualitativamente distinta.}
+\label{fig:sens-familia}
+\end{figure}
+
+\textbf{Sensibilidad al nivel $J$: acotado por la respuesta más corta.} Al variar $J\in\{1,\ldots,5\}$
+sobre las mismas señales cortas ($12$--$54$ tokens) de esta sección, el nivel \emph{efectivamente}
+usado quedó fijo en $1$ para los cinco valores de $J$ solicitados --\texttt{aplicar\_dwt\_posicional}
+acota el nivel por la respuesta más corta del lote (\cref{sec:indice})--, de modo que
+$\hat\theta$ no cambió en absoluto al variar $J$ (\cref{fig:sens-nivel}, panel izquierdo). Como
+control, repetimos el experimento con respuestas simuladas largas ($150$--$400$ tokens): ahí el
+nivel efectivo sí sube con $J$ ($1,2,3,4,4$) y $\hat\theta$ se desplaza notablemente, con
+dispersión creciente en los niveles más altos (panel derecho).
+
+\begin{warningBox}[title={Hallazgo: el parámetro $J$ es efectivamente inútil para encuestas típicas}]
+Con las longitudes de respuesta simuladas en esta sección (representativas de comentarios cortos
+de encuesta), el parámetro $J$ que el usuario elige en la interfaz no tiene ningún efecto: basta
+una sola respuesta corta en el lote para que el nivel efectivo quede acotado en $1$
+independientemente de qué tan alto se pida $J$. El control deslizante ``Nivel de descomposición
+$J$'' de \texttt{pages/sentimiento.py} solo importa, en la práctica, para encuestas con
+respuestas consistentemente largas. Agregamos una advertencia en la interfaz
+(\texttt{pages/sentimiento.py}) que avisa explícitamente cuando esto ocurre, en vez de dejar que
+el usuario suba $J$ sin efecto visible y sin saber por qué.
+\end{warningBox}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{figs/fig_sensibilidad_nivel.pdf}
+\caption{Sensibilidad a $J$ en dos regímenes: respuestas cortas (izquierda, nivel efectivo
+atorado en 1) y respuestas largas (derecha, nivel efectivo sube con $J$ y $\hat\theta$ cambia de
+verdad).}
+\label{fig:sens-nivel}
+\end{figure}
+
+\FloatBarrier
+
 \section{Impact}
 \label{sec:impacto}
 
@@ -421,7 +506,9 @@ educativa reportan una cifra sin decir qué garantiza matemáticamente esa cifra
 
 El límite honesto al reuso inmediato es el que ya se documentó en las secciones anteriores: el
 índice $\hat\theta$ depende del modelo de embeddings elegido, de la familia y nivel de la
-wavelet, y del tamaño de la encuesta; con $N<30$ las estimaciones bootstrap de varianza son
+wavelet, y del tamaño de la encuesta --cuantificado en el análisis de sensibilidad de la
+\cref{sec:sensibilidad}: la familia haar es cualitativamente distinta a las demás, y $J$ no tiene
+efecto alguno para respuestas cortas--; con $N<30$ las estimaciones bootstrap de varianza son
 inestables y el propio sistema advierte de ello en la interfaz. Las interpretaciones textuales
 que genera el módulo \texttt{interpretacion.py} son sugerencias de lectura, no conclusiones
 definitivas, y deben cotejarse con el criterio del docente y, cuando el caso lo amerite, con

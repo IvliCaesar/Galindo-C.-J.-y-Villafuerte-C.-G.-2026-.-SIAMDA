@@ -186,7 +186,8 @@ they have a special status on record, regardless of the numeric grade.
 \label{sec:indice}
 
 For each student $i$, the multilingual \emph{sentence-transformers} model
-(\texttt{paraphrase-multilingual-MiniLM-L12-v2}, dimension $d=384$) \cite{ReimersGurevych2019}
+(\texttt{paraphrase-\allowbreak multilingual-\allowbreak MiniLM-\allowbreak L12-\allowbreak v2},
+dimension $d=384$) \cite{ReimersGurevych2019}
 produces, in a single \emph{forward pass}: the sentence embedding $x_i\in\mathbb{R}^d$
 (normalized to unit norm) and, for each token $t=1,\ldots,L_i$ of the response, a contextual
 embedding $u_{i,t}\in\mathbb{R}^d$. From these a scalar signal is built, \emph{indexed by token
@@ -341,7 +342,7 @@ synthetic, built to exercise the real code in \texttt{processing/nlp\_wavelet.py
 inputs, for the sole purpose of showing how to read the plots the system produces and of
 numerically exhibiting the point made in \cref{sec:crb}. The correlation in
 \cref{fig:correlacion} is imposed by construction in the simulation, not observed. Generation
-code: \texttt{generar\_figuras\_articulo\_en.py}.
+code: \path{generar_figuras_articulo_en.py}.
 \end{warningBox}
 
 We simulate $N=60$ responses of variable length ($L_i$ a uniform integer in $\{12,\ldots,54\}$
@@ -388,6 +389,87 @@ illustrate how this plot is read in the real interface.}
 
 \FloatBarrier
 
+\subsection{Sensitivity analysis}
+\label{sec:sensibilidad}
+
+The previous sections \emph{claim} that $\hat\theta$ depends on sample size, on the wavelet
+family, and on the decomposition level, but up to this point did not show that numerically. This
+subsection does, running the same real code (\texttt{aplicar\_dwt\_posicional},
+\texttt{calcular\_indice\_sentimiento}, \texttt{calcular\_cramer\_rao}) over controlled
+variations of the simulation above (\path{generar_figuras_sensibilidad_en.py}). Like the
+rest of this section, these are simulations, not course data.
+
+\textbf{Sensitivity to $N$.} For $N\in\{8,10,15,20,30,40,60,100,150,250\}$, with 20 independent
+replicates per value of $N$, we measure the bootstrap interval width
+$2\sqrt{\widehat{\mathrm{Var}}(\bar\theta)}$ and the EEE (\cref{fig:sens-N}). The right panel
+confirms the claim made in \cref{sec:impacto}: the interval width decreases consistently and its
+variability across replicates is much larger for $N<30$ than for large $N$. The left panel, on
+the other hand, reveals something \cref{sec:crb} already anticipated: EEE stays between $0.96$
+and $1.00$ across the \emph{entire} range of $N$ tested, with no clear improving trend ---
+consistent with the fact that, under the Gaussian model, efficiency does not measure how good
+the pipeline is, but a property of the sample mean that holds almost always.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{figs_en/fig_sensitivity_N.pdf}
+\caption{Sensitivity to $N$ (20 replicates per value of $N$). Left: EEE stays high regardless of
+$N$. Right: the bootstrap interval width does decrease and stabilize with $N$, and is notably
+more dispersed across replicates for $N<30$.}
+\label{fig:sens-N}
+\end{figure}
+
+\textbf{Sensitivity to wavelet family.} On the same 60 simulated signals, we compute $\hat\theta$
+with each of the six families offered by the real interface (\texttt{WAVELETS\_DISPONIBLES} in
+\texttt{pages/sentimiento.py}): db4, db2, haar, sym4, coif2, and dmey (\cref{fig:sens-familia}).
+The db4, sym4, coif2, and dmey results agree closely with each other (Pearson correlation
+against db4 between $0.72$ and $0.80$); db2 deviates moderately (correlation $0.77$, but with a
+tail of positive outliers); \textbf{haar is qualitatively different}: its median approaches zero
+and its interquartile range crosses the sign, with a correlation of only $0.50$ against db4. This
+has a direct explanation: haar is the family with the shortest filter (length 2), so its
+approximation/detail split captures a much finer, noisier notion of ``local'' than the
+longer-filter families. In practice, this means the default choice (db4) is not interchangeable
+with \emph{all} of the menu's options: switching to haar can flip the sign of the reported index
+for the same text.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=0.85\linewidth]{figs_en/fig_sensitivity_family.pdf}
+\caption{Distribution of $\hat\theta$ for the interface's six wavelet families, on the same 60
+simulated signals. db4/sym4/coif2/dmey agree closely; haar --the shortest filter-- is
+qualitatively different.}
+\label{fig:sens-familia}
+\end{figure}
+
+\textbf{Sensitivity to level $J$: bounded by the shortest response.} Varying $J\in\{1,\ldots,5\}$
+over this section's same short signals ($12$--$54$ tokens), the \emph{effective} level used stayed
+fixed at $1$ for all five requested values of $J$ --\texttt{aplicar\_dwt\_posicional} bounds the
+level by the shortest response in the batch (\cref{sec:indice})--, so $\hat\theta$ did not change
+at all as $J$ varied (\cref{fig:sens-nivel}, left panel). As a control, we repeated the experiment
+with long simulated responses ($150$--$400$ tokens): there the effective level does rise with $J$
+($1,2,3,4,4$) and $\hat\theta$ shifts noticeably, with growing dispersion at the higher levels
+(right panel).
+
+\begin{warningBox}[title={Finding: the $J$ parameter is effectively useless for typical surveys}]
+With the response lengths simulated in this section (representative of short survey comments),
+the $J$ parameter the user selects in the interface has no effect whatsoever: a single short
+response in the batch is enough for the effective level to stay bounded at $1$ regardless of how
+high $J$ is requested. The ``Decomposition level $J$'' slider in \texttt{pages/sentimiento.py}
+only matters, in practice, for surveys with consistently long responses. We added a warning in
+the interface (\texttt{pages/sentimiento.py}) that explicitly flags when this happens, instead of
+letting the user raise $J$ with no visible effect and no explanation why.
+\end{warningBox}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{figs_en/fig_sensitivity_level.pdf}
+\caption{Sensitivity to $J$ under two regimes: short responses (left, effective level stuck at
+1) and long responses (right, effective level rises with $J$ and $\hat\theta$ genuinely
+changes).}
+\label{fig:sens-nivel}
+\end{figure}
+
+\FloatBarrier
+
 \section{Impact}
 \label{sec:impacto}
 
@@ -403,7 +485,9 @@ report a number without stating what it mathematically guarantees and what it do
 
 The honest limit on immediate reuse is the one already documented in the previous sections: the
 index $\hat\theta$ depends on the chosen embedding model, on the wavelet family and level, and on
-the survey's size; with $N<30$ the bootstrap variance estimates are unstable, and the system
+the survey's size --quantified in the sensitivity analysis of \cref{sec:sensibilidad}: the haar
+family is qualitatively different from the others, and $J$ has no effect at all for short
+responses--; with $N<30$ the bootstrap variance estimates are unstable, and the system
 itself warns about this in the interface. The textual interpretations generated by the
 \texttt{interpretacion.py} module are reading suggestions, not definitive conclusions, and should
 be checked against the instructor's judgment and, when warranted, institutional

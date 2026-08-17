@@ -108,6 +108,15 @@ def render():
         theta_hat = resultado["theta_hat"]
         wcoefs    = resultado["wcoefs"]
 
+        if wcoefs["nivel"] < nivel:
+            st.warning(
+                f" El nivel de descomposición pedido (J={nivel}) se redujo a "
+                f"J={wcoefs['nivel']} porque la respuesta más corta del lote no soporta un "
+                f"nivel mayor (pywt.dwt_max_level). Con respuestas cortas, subir J más allá de "
+                f"este límite no cambia el resultado — considera revisar la distribución de "
+                f"longitudes de las respuestas si esto te sorprende."
+            )
+
         df_sent = pd.DataFrame({
             "_id":       ids,
             "theta_hat": theta_hat,
