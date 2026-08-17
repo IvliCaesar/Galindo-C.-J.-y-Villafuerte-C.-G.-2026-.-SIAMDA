@@ -11,10 +11,12 @@ authors:
   - name: César Galindo López
     affiliation: 1
   - name: Gabriel Villafuerte C.
-    affiliation: "1, TODO — confirm Gabriel's affiliation before submitting"
+    affiliation: 2
 affiliations:
   - name: Universidad Panamericana, Facultad de Empresariales, Ciudad UP, Mexico
     index: 1
+  - name: Facultad de Estudios Superiores Acatlán, Universidad Nacional Autónoma de México (UNAM), Mexico
+    index: 2
 date: 16 August 2026
 bibliography: paper.bib
 ---
