@@ -421,15 +421,20 @@ more dispersed across replicates for $N<30$.}
 \textbf{Sensitivity to wavelet family.} On the same 60 simulated signals, we compute $\hat\theta$
 with each of the six families offered by the real interface (\texttt{WAVELETS\_DISPONIBLES} in
 \texttt{pages/sentimiento.py}): db4, db2, haar, sym4, coif2, and dmey (\cref{fig:sens-familia}).
-The db4, sym4, coif2, and dmey results agree closely with each other (Pearson correlation
-against db4 between $0.72$ and $0.80$); db2 deviates moderately (correlation $0.77$, but with a
-tail of positive outliers); \textbf{haar is qualitatively different}: its median approaches zero
-and its interquartile range crosses the sign, with a correlation of only $0.50$ against db4. This
-has a direct explanation: haar is the family with the shortest filter (length 2), so its
-approximation/detail split captures a much finer, noisier notion of ``local'' than the
+In aggregate distribution (median and spread), db4, sym4, coif2, and dmey look similar in the box
+plot, but the point-by-point Pearson correlation against db4 --how much two families agree on
+\emph{which} student has a high or low $\hat\theta$, not just on the shape of the aggregate
+distribution-- tells a more nuanced story: coif2 ($r=0.80$) and dmey ($r=0.72$) do agree closely
+with db4; sym4, despite its visually similar aggregate distribution, agrees more weakly at the
+individual level ($r=0.59$, comparable to db2); db2 has a moderate correlation ($r=0.77$) but
+with a tail of positive outliers; \textbf{haar is qualitatively different}: its median approaches
+zero and its interquartile range crosses the sign, with the lowest correlation in the group
+($r=0.50$). haar has a direct explanation: it is the family with the shortest filter (length 2),
+so its approximation/detail split captures a much finer, noisier notion of ``local'' than the
 longer-filter families. In practice, this means the default choice (db4) is not interchangeable
 with \emph{all} of the menu's options: switching to haar can flip the sign of the reported index
-for the same text.
+for the same text, and even a family with a similar aggregate distribution (sym4) can
+non-trivially reorder which students end up at the extremes.
 
 \begin{figure}[htb]
 \centering

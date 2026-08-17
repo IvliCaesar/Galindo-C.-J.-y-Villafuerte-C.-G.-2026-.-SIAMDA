@@ -132,7 +132,7 @@ Correo de soporte para preguntas & \texttt{jcgalindo@up.edu.mx} \\
 \label{tab:metadata}
 \end{table}
 
-\section{Motivation and significance}
+\section{Motivación y relevancia}
 \label{sec:motivacion}
 
 Un curso genera dos tipos de señal sobre el desempeño de un alumno: una \emph{cuantitativa}
@@ -155,10 +155,10 @@ separado, sino documentar con precisión qué certifica —y, sobre todo, qué \
 su combinación, algo que la primera versión de nuestra propia implementación afirmaba de forma
 imprecisa (\cref{sec:crb}).
 
-\section{Software description}
+\section{Descripción del software}
 \label{sec:descripcion}
 
-\subsection{Software architecture}
+\subsection{Arquitectura del software}
 \label{sec:arquitectura}
 
 El sistema se organiza en cuatro módulos:
@@ -180,7 +180,7 @@ El sistema se organiza en cuatro módulos:
   automáticas en lenguaje natural para cada métrica.
 \end{enumerate}
 
-\subsection{Software functionalities}
+\subsection{Funcionalidades del software}
 \label{sec:funcionalidades}
 
 \subsubsection{Bandera de riesgo académico}
@@ -348,7 +348,7 @@ motivación extrínseca. El sistema clasifica la fuerza de la asociación en umb
 fuerte, $|r|\ge 0.3$ moderada, $|r|<0.3$ débil) y explícitamente reporta cuando la correlación no
 es significativa, sin forzar una narrativa de riesgo donde no hay evidencia estadística.
 
-\section{Illustrative example}
+\section{Ejemplo ilustrativo}
 \label{sec:resultados}
 
 \begin{warningBox}[title={Estas figuras son simulación, no datos de curso}]
@@ -439,16 +439,22 @@ con $N$, y es notablemente más disperso entre réplicas para $N<30$.}
 \textbf{Sensibilidad a la familia de onduleta.} Sobre las mismas 60 señales simuladas, calculamos
 $\hat\theta$ con cada una de las seis familias que ofrece la interfaz real
 (\texttt{WAVELETS\_DISPONIBLES} en \texttt{pages/sentimiento.py}): db4, db2, haar, sym4, coif2 y
-dmey (\cref{fig:sens-familia}). Los resultados de db4, sym4, coif2 y dmey coinciden de cerca
-entre sí (correlación de Pearson contra db4 entre $0.72$ y $0.80$); db2 se desvía moderadamente
-(correlación $0.77$, pero con una cola de valores atípicos positivos); \textbf{haar es
-cualitativamente distinta}: su mediana se acerca a cero y su rango intercuartílico cruza el signo,
-con correlación de solo $0.50$ contra db4. Esto tiene una explicación directa: haar es la familia
-con el filtro más corto (longitud 2), por lo que su separación aproximación/detalle captura una
-noción de ``local'' mucho más fina y ruidosa que las familias con filtros más largos. En la
-práctica, esto significa que la elección por defecto (db4) no es intercambiable con \emph{todas}
-las opciones del menú: cambiar a haar puede cambiar el signo del índice reportado para el mismo
-texto.
+dmey (\cref{fig:sens-familia}). En distribución agregada (mediana y dispersión), db4, sym4,
+coif2 y dmey se ven similares en la gráfica de caja, pero la correlación de Pearson punto a punto
+contra db4 --qué tan de acuerdo están dos familias sobre \emph{cuál} alumno tiene un $\hat\theta$
+alto o bajo, no solo sobre la forma de la distribución agregada-- cuenta una historia más matizada:
+coif2 ($r=0.80$) y dmey ($r=0.72$) sí concuerdan de cerca con db4; sym4, a pesar de su
+distribución agregada visualmente parecida, concuerda más débilmente a nivel individual
+($r=0.59$, comparable a db2); db2 tiene una correlación moderada ($r=0.77$) pero con una cola de
+valores atípicos positivos; \textbf{haar es cualitativamente distinta}: su mediana se acerca a
+cero y su rango intercuartílico cruza el signo, con la correlación más baja del grupo
+($r=0.50$). Esto tiene una explicación directa para haar: es la familia con el filtro más corto
+(longitud 2), por lo que su separación aproximación/detalle captura una noción de ``local'' mucho
+más fina y ruidosa que las familias con filtros más largos. En la práctica, esto significa que la
+elección por defecto (db4) no es intercambiable con \emph{todas} las opciones del menú: cambiar a
+haar puede cambiar el signo del índice reportado para el mismo texto, y aun familias con
+distribución agregada similar (sym4) pueden reordenar de forma no trivial qué alumnos quedan en
+los extremos.
 
 \begin{figure}[htb]
 \centering
@@ -490,7 +496,7 @@ verdad).}
 
 \FloatBarrier
 
-\section{Impact}
+\section{Impacto}
 \label{sec:impacto}
 
 El sistema apunta a un problema genérico de docencia (no solo de un curso o institución): la
@@ -529,7 +535,7 @@ Código, datos de ejemplo, 22 pruebas automatizadas (\texttt{pytest}, ejecutadas
 \cref{sec:arquitectura}.
 \end{implBox}
 
-\section{Conclusions}
+\section{Conclusiones}
 
 Este sistema integra dos señales de un curso —calificaciones y respuestas abiertas de
 encuesta— bajo un mismo tablero, y añade a la segunda una métrica reproducible ($\hat\theta$,
@@ -540,7 +546,7 @@ vez de impresionista, el vínculo entre el tono de las respuestas de un grupo y 
 que documenta honestamente qué certifica su capa estadística y qué no. Queda como trabajo futuro
 la validación de $\hat\theta$ contra anotación humana sobre datos reales de curso.
 
-\section*{Declaration of competing interest}
+\section*{Declaración de conflicto de intereses}
 
 Los autores declaran no tener conflictos de interés conocidos que pudieran haber influido en el
 trabajo reportado en este artículo.
