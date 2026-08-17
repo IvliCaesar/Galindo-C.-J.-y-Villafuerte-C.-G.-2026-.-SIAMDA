@@ -50,7 +50,7 @@ The system is modularized into distinct analytical pipelines:
 
 ```bash
 # 1. Clone the repository
-git clone [https://github.com/Gabriel44svg/Galindo-C.-J.-y-Villafuerte-C.-G.-2026-.-SIAMDA.git](https://github.com/Gabriel44svg/Galindo-C.-J.-y-Villafuerte-C.-G.-2026-.-SIAMDA.git)
+git clone https://github.com/Gabriel44svg/Galindo-C.-J.-y-Villafuerte-C.-G.-2026-.-SIAMDA.git
 cd SIAMDA
 
 # 2. Create and activate a virtual environment (Recommended)
@@ -66,4 +66,36 @@ pip install -r requirements.txt
 # 4. Launch the application
 streamlit run app.py
 ```
+
+---
+
+##  Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest -v
+```
+
+22 tests cover the risk flag, the wavelet pipeline, and the Fisher-information/Cramér-Rao
+formulas against hand-derived references (`tests/`). They run automatically on every push/PR via
+GitHub Actions (`.github/workflows/tests.yml`) and do not require downloading the
+`sentence-transformers` model.
+
+---
+
+##  Paper
+
+Two companion technical notes document the system's mathematics, a worked simulated example, and
+a sensitivity analysis (sample size, wavelet family, decomposition level) — all clearly labeled
+as simulation, not real course data:
+
+* Spanish: [`galindo_villafuerte.pdf`](galindo_villafuerte.pdf) / [`.tex`](galindo_villafuerte.tex)
+* English: [`galindo_villafuerte_en.pdf`](galindo_villafuerte_en.pdf) / [`.tex`](galindo_villafuerte_en.tex)
+
+A short [JOSS](https://joss.theoj.org/)-format submission draft is in [`paper.md`](paper.md) /
+[`paper.bib`](paper.bib).
+
+##  License
+
+[MIT](LICENSE).
 

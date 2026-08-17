@@ -72,7 +72,12 @@ Streamlit interface across four pages (data loading,
 course metrics, sentiment analysis, theoretical validation) with automatically generated
 natural-language interpretations for each metric. Sentence and token embeddings are obtained
 from a single `sentence-transformers` [@ReimersGurevych2019] forward pass; the wavelet
-decomposition uses `PyWavelets`; statistical tests use `scipy.stats`.
+decomposition uses `PyWavelets`; statistical tests use `scipy.stats`. A systematic sensitivity
+sweep over sample size, wavelet family, and decomposition level (reported in the companion paper
+[@GalindoVillafuerte2026]) surfaced a real, previously undocumented UX gap: with realistically
+short survey responses, the decomposition-level parameter has no effect on the output, because
+the shortest response in a batch silently caps the level for the whole group. The interface now
+warns the user explicitly when this happens, rather than leaving the control appear broken.
 
 # Mathematics
 
@@ -90,9 +95,11 @@ formulas, and a worked simulated example are in the accompanying paper
 
 # Research impact statement
 
-`SIAMDA` is, to our knowledge, the first open-source tool to pair a wavelet-based text sentiment
-index with an explicit, honestly-scoped statistical efficiency certificate for its own aggregate
-estimator, rather than reporting a bare score. Its intended impact is methodological: lowering
+We are not aware of an open-source learning-analytics tool that pairs a wavelet-based text
+sentiment index with an explicit, honestly-scoped statistical efficiency certificate for its own
+aggregate estimator, rather than reporting a bare score, though we have not conducted a
+systematic literature/tool review and make no claim of priority. `SIAMDA`'s intended impact is
+methodological: lowering
 the barrier for instructors to use a reproducible, quantifiable reading of qualitative feedback,
 while making explicit -- in both the software and the paper -- what such a check does and does
 not establish, so it is not mistaken for a validated measure of "true sentiment" without further,
